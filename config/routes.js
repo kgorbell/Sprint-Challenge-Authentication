@@ -2,6 +2,8 @@ const axios = require('axios');
 
 const { authenticate } = require('./middlewares');
 
+const db = require('../database/dbConfig');
+
 module.exports = server => {
   server.post('/api/register', register);
   server.post('/api/login', login);
@@ -10,6 +12,18 @@ module.exports = server => {
 
 function register(req, res) {
   // implement user registration
+  const user = req.body;
+  db('users')
+    .insert(user)
+    .then(ids => {
+      db('users')
+        .where({ id: ids[0] })
+        .first()
+        .then( user => {
+          res.status(201).json(user)
+        })
+        .catch(err => console.error('Registration Failed'))
+    })
 }
 
 function login(req, res) {
