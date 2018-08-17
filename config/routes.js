@@ -1,4 +1,6 @@
 const axios = require('axios');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const { authenticate } = require('./middlewares');
 
@@ -13,6 +15,10 @@ module.exports = server => {
 function register(req, res) {
   // implement user registration
   const user = req.body;
+
+  const hash = bcrypt.hashSync(user.password, 14);
+  user.password = hash;
+  
   db('users')
     .insert(user)
     .then(ids => {
