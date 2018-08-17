@@ -1,8 +1,7 @@
 const axios = require('axios');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 
-const { authenticate } = require('./middlewares');
+const { authenticate, generateToken } = require('./middlewares');
 
 const db = require('../database/dbConfig');
 
@@ -12,13 +11,14 @@ module.exports = server => {
   server.get('/api/jokes', authenticate, getJokes);
 };
 
+
 function register(req, res) {
   // implement user registration
   const user = req.body;
 
   const hash = bcrypt.hashSync(user.password, 14);
   user.password = hash;
-  
+
   db('users')
     .insert(user)
     .then(ids => {
@@ -26,7 +26,8 @@ function register(req, res) {
         .where({ id: ids[0] })
         .first()
         .then( user => {
-          res.status(201).json(user)
+          const token = generateToken(user);
+          res.status(201).json(token)
         })
         .catch(err => console.error('Registration Failed'))
     })
@@ -39,8 +40,9 @@ function login(req, res) {
     .where({ username: credentials.username})
     .first()
     .then(user => {
-      if (user) {
-        res.status(200).json(user)
+      if (user && bcrypt.compareSync(credentials.password, user.password)) {
+        const token = generateToken(user);
+        res.status(200).json(token)
       } else {
         res.status(401).json({ error: 'The provided username and password combination does not match' })
       }
