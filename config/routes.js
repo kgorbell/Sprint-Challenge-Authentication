@@ -28,6 +28,18 @@ function register(req, res) {
 
 function login(req, res) {
   // implement user login
+  const credentials = req.body;
+  db('users')
+    .where({ username: credentials.username})
+    .first()
+    .then(user => {
+      if (user) {
+        res.status(200).json(user)
+      } else {
+        res.status(401).json({ error: 'The provided username and password combination does not match' })
+      }
+    })
+    .catch(err => console.error('Login failed'))
 }
 
 function getJokes(req, res) {
